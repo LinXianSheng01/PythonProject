@@ -1,0 +1,48 @@
+"""-------------------------------------------------------------------
+Project_Name:Crawl comments
+
+Project_Use: 爬取豆瓣《爱X公寓》的评论
+
+Project_background：
+    我打算最近去看《爱X公寓》，但是看评论不太好，正好看了某B站大佬的视频，讲的
+    就是利用request+正则表达式爬取猫眼电影榜单，就突发奇想，既然我也学了点爬虫和
+    正则表达式，就拿《爱X公寓》这部电影的评论试试手，实践下，即写出此程序，爬取
+    我需要的评论，（本来打算爬取猫眼的，但是试了几次后发现无他突破反爬，我学识尚浅，
+    对于反爬的应对学习了解的还不够多，所以，放弃了，转去爬取豆瓣的）
+    总的来说，结果还算比较满意，但是有一些bug还没修复，不过不打紧，在下方阐述
+
+Project_Bug：
+    通过踩点我发现，评论的每一页的区别即是start=后的数字每个页面之间相差20
+    然后就通过main函数的参数number，把0-20之间的所有url爬取下来，看了结果
+    后发现，有些数据重复了，而且，很多，然后就把迭代值设为2，每次迭代增加2
+    重复的问题解决了，但是，缺少了少量的数据，我认为虽然程序还不完美，但是
+    已满足我的基本需要了，时间关系，就先不修改了
+
+data :2018.8.11.21:51
+
+Writer：Mr.Lin
+------------------------------------------------------------------"""
+
+import requests#爬虫模块
+import  re#正则表达式模块
+from multiprocessing import Pool#多线程模块
+
+def get_doc(url):
+    response = requests.get(url)#获取网页源代码
+    parten = re.compile('<div.*?comment-item.*?<span.*?"short">(.*?)</span>.*?</div>', re.S)#指定正则表达式对象及正则表达式
+    items = re.findall(parten, response.text) #按照正则表达式查找，返回一个所有满足条件的字符串，返回的是一个list对象
+    with open("response.txt", 'a', encoding = 'utf-8') as f:#写入文件
+        for item in items:
+            f.write(item+'\n')
+    f.close()
+
+def main(number):
+    url = 'https://movie.douban.com/subject/24852545/comments?start={0}&limit=20&sort=new_score&status=P'.format(str(number))
+    response = get_doc(url)
+
+
+if __name__ == '__main__':#测试
+
+    pool = Pool()#创建进程池
+    pool.map(main, [i*10 for i in range(0,21,2)])#参数1为函数，参数2是一个迭代器，讲迭代器中的数字作为参数传给函数
+    #以上此步是为了爬取多个网页的数据，发现其规律每页start=后的数字相差20
