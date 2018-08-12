@@ -1,0 +1,103 @@
+'''-------------Project intro-----------------------
+Project_name :Crawl fiction
+
+Projiect_Use : 爬取指定的小说
+
+Project_background：看到群里有朋友在爬取小说时出现问题，我就闲来无事，本来就像实践下
+爬虫的相关知识，就试着自己写了个爬取该小说的程序
+
+Project_Bug：因为我是抱着帮助群里朋友的心态去做的这个程序，所以，我没有要求非常完美，
+对比了几下爬虫的后的文章，发现头部尾部均一致，我也没有仔细去测试，如使用发现BUG请联系作者
+多谢
+
+Correlation_Technique:
+    用到了正则表达式，bs4解析库和requests
+
+data ：2018-8-12-15：46
+
+Writer：Mr.Lin
+
+Writer_Qq：406802063
+
+----------------------------------------------------
+'''
+
+
+
+
+
+
+
+
+
+
+
+
+# -*- coding: utf-8 -*- #告诉编译器，此源程序是utf-8编码
+import requests
+import  re
+import  bs4
+
+'''
+get_Doc(url)
+    获取制定URL的源代码，并返回
+    参数：URL 要获取的源代码地址
+'''
+
+def get_doc(url):
+    response = requests.get(url)
+    return response
+
+'''
+download_fiition(url,name)
+    根据指定的url获取源代码，并解析出需要的信息，写入文件
+    url：同上
+    name：保存的文件名
+'''
+
+def download_fiction(url,name):#
+    print(url)#调试用
+    response = get_doc(url)
+    response.encoding = "GBK"#指定返回的源代码字符集            #解析(关于此处为和不用正则表达式：
+    soup = bs4.BeautifulSoup(response.text,'html.parser')   #因为我用正则表达式爬取不到我想要的内容，比较困难
+    items = soup.find_all('div',id='content')               #所以该用本人觉得相对简单些的bs4解析库）
+    with open(name+'.txt','a', encoding='utf-8') as f:#写入文件
+        for item in items:
+            f.write(item.text)
+
+'''
+get_fiction(items)
+    获取该小说所有章节存储的网页（返回的数据需要加上http://www.biquge.com.tw）
+    以及小说章节的名称，并调用download_fiition函数解析写入文件
+'''
+
+def get_fiction(items):
+    for item in items:
+        download_fiction('http://www.biquge.com.tw'+item[0], item[1])
+
+'''
+get_ficiton_path(url)
+    解析存放小说所有章节的网页返回的数据需要加上http://www.biquge.com.tw），
+    并解析出所有章节存放的地址后半部分（前半部分相同）和文章名称，
+    最后调用get_fiction来解析读取小说
+'''
+
+def get_ficiton_path(url):
+    response= get_doc(url)
+    print(response.encoding)#调试，查看返回数据的字符编码
+    response.encoding = 'GBK'#更改返回数据的字符编码
+    parten = re.compile('<dd>.*?href="(.*?)">(.*?)</a></dd>', re.S)#解析
+    items = re.findall(parten, response.text)
+    get_fiction(items)
+'''
+main()
+    给定包含所有章节地址的网页并传入
+'''
+
+def main():
+    url = "http://www.biquge.com.tw/0_213/"
+    response = get_ficiton_path(url)
+
+
+if __name__ == '__main__':
+    main()#测试
